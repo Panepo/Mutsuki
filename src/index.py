@@ -15,141 +15,135 @@
  limitations under the License.
 """
 
-import logging as log
+from __future__ import print_function
+
 import sys
-import time
 from argparse import ArgumentParser, SUPPRESS
 
-import numpy as np
+from openvino.inference_engine import IECore
 
-from image_retrieval import ImageRetrieval
-from common import central_crop
-from visualizer import visualize
-from roi_detector_on_video import RoiDetectorOnVideo
+from utils.models import IEModel
+from utils.result_renderer import ResultRenderer
+from utils.steps import run_pipeline
+from os import path
 
-INPUT_SIZE = 224
+
+def video_demo(encoder, decoder, videos, fps=30, labels=None):
+    """Continuously run demo on provided video list"""
+    result_presenter = ResultRenderer(labels=labels)
+    run_pipeline(videos, encoder, decoder, result_presenter.render_frame, fps=fps)
 
 
 def build_argparser():
-    """ Returns argument parser. """
-
     parser = ArgumentParser(add_help=False)
-    args = parser.add_argument_group('Options')
-    args.add_argument('-h', '--help', action='help', default=SUPPRESS,
-                      help='Show this help message and exit.')
-    args.add_argument('-m', '--model',
-                      help='Required. Path to an .xml file with a trained model.',
-                      default="../models/image-retrieval-0001.xml",
-                      type=str)
-    args.add_argument('-i',
-                      help='Required. Path to a video file or a device node of a web-camera.',
-                      required=True, type=str)
-    args.add_argument('-g', '--gallery',
-                      help='Required. Path to a file listing gallery images.',
-                      required=True, type=str)
-    args.add_argument('-gt', '--ground_truth',
-                      help='Optional. Ground truth class.',
-                      type=str)
-    args.add_argument('-d', '--device',
-                      help='Optional. Specify the target device to infer on: CPU, GPU, FPGA, HDDL '
-                           'or MYRIAD. The demo will look for a suitable plugin for device '
-                           'specified (by default, it is CPU).',
-                      default='CPU', type=str)
-    args.add_argument("-l", "--cpu_extension",
-                      help="Optional. Required for CPU custom layers. Absolute path to "
-                           "a shared library with the kernels implementations.", type=str,
-                      default="/opt/intel/openvino_2019.3.376/inference_engine/lib/intel64/libcpu_extension_avx512.so.so")
+    args = parser.add_argument_group("Options")
+    args.add_argument(
+        "-h",
+        "--help",
+        action="help",
+        default=SUPPRESS,
+        help="Show this help message and exit.",
+    )
+    args.add_argument(
+        "-m_en",
+        "--m_encoder",
+        help="Required. Path to encoder model",
+        type=str,
+        default="../models/driver_action_recognition_tsd_0002_encoder.xml",
+    )
+    args.add_argument(
+        "-m_de",
+        "--m_decoder",
+        help="Required. Path to decoder model",
+        type=str,
+        default="../models/driver_action_recognition_tsd_0002_decoder.xml",
+    )
+    args.add_argument(
+        "-i",
+        "--input",
+        help="Required. Id of the video capturing device to open (to open default camera just pass 0), "
+        "path to a video or a .txt file with a list of ids or video files (one object per line)",
+        required=True,
+        type=str,
+    )
+    args.add_argument(
+        "-l",
+        "--cpu_extension",
+        help="Optional. For CPU custom layers, if any. Absolute path to a shared library with the "
+        "kernels implementation.",
+        type=str,
+        default="/opt/intel/openvino_2019.3.376/inference_engine/lib/intel64/libcpu_extension_sse4.so",
+    )
+    args.add_argument(
+        "-d",
+        "--device",
+        help="Optional. Specify a target device to infer on. CPU, GPU, FPGA, HDDL or MYRIAD is "
+        "acceptable. The demo will look for a suitable plugin for the device specified. "
+        "Default value is CPU",
+        default="CPU",
+        type=str,
+    )
+    args.add_argument("--fps", help="Optional. FPS for renderer", default=30, type=int)
+    args.add_argument(
+        "-lb", "--labels", help="Optional. Path to file with label names", type=str
+    )
 
     return parser
 
 
-def compute_metrics(positions):
-    ''' Computes top-N metrics. '''
-
-    top_1_acc = 0
-    top_5_acc = 0
-    top_10_acc = 0
-
-    for position in positions:
-        if position < 1:
-            top_1_acc += 1
-        if position < 5:
-            top_5_acc += 1
-        if position < 10:
-            top_10_acc += 1
-
-    mean_pos = np.mean(positions)
-
-    if positions:
-        log.info("result: top1 {0:.2f} top5 {1:.2f} top10 {2:.2f} mean_pos {3:.2f}".format(
-            top_1_acc / len(positions), top_5_acc / len(positions), top_10_acc / len(positions),
-            mean_pos))
-
-    return top_1_acc, top_5_acc, top_10_acc, mean_pos
-
-
-def time_elapsed(func, *args):
-    """ Auxiliary function that helps measure elapsed time. """
-
-    start_time = time.perf_counter()
-    res = func(*args)
-    elapsed = time.perf_counter() - start_time
-    return elapsed, res
-
-
 def main():
-    """ Main function. """
-
-    log.basicConfig(format='[ %(levelname)s ] %(message)s', level=log.INFO, stream=sys.stdout)
     args = build_argparser().parse_args()
 
-    img_retrieval = ImageRetrieval(args.model, args.device, args.gallery, INPUT_SIZE,
-                                   args.cpu_extension)
+    full_name = path.basename(args.input)
+    extension = path.splitext(full_name)[1]
 
-    frames = RoiDetectorOnVideo(args.i)
+    if ".txt" in extension:
+        with open(args.input) as f:
+            videos = [line.strip() for line in f.read().split("\n")]
+    else:
+        videos = [args.input]
 
-    compute_embeddings_times = []
-    search_in_gallery_times = []
+    if not args.input:
+        raise ValueError("--input option is expected")
 
-    positions = []
+    if args.labels:
+        with open(args.labels) as f:
+            labels = [l.strip() for l in f.read().strip().split("\n")]
+    else:
+        labels = None
 
-    for image, view_frame in frames:
-        position = None
-        sorted_indexes = []
+    ie = IECore()
 
-        if image is not None:
-            image = central_crop(image, divide_by=5, shift=1)
+    if "MYRIAD" in args.device:
+        myriad_config = {"VPU_HW_STAGES_OPTIMIZATION": "YES"}
+        ie.set_config(myriad_config, "MYRIAD")
 
-            elapsed, probe_embedding = time_elapsed(img_retrieval.compute_embedding, image)
-            compute_embeddings_times.append(elapsed)
+    if args.cpu_extension and "CPU" in args.device:
+        ie.add_extension(args.cpu_extension, "CPU")
 
-            elapsed, (sorted_indexes, distances) = time_elapsed(img_retrieval.search_in_gallery,
-                                                                probe_embedding)
-            search_in_gallery_times.append(elapsed)
+    decoder_target_device = "CPU"
+    if args.device != "CPU":
+        encoder_target_device = args.device
+    else:
+        encoder_target_device = decoder_target_device
 
-            sorted_classes = [img_retrieval.gallery_classes[i] for i in sorted_indexes]
+    encoder_xml = args.m_encoder
+    encoder_bin = args.m_encoder.replace(".xml", ".bin")
+    decoder_xml = args.m_decoder
+    decoder_bin = args.m_decoder.replace(".xml", ".bin")
 
-            if args.ground_truth is not None:
-                position = sorted_classes.index(
-                    img_retrieval.text_label_to_class_id[args.ground_truth])
-                positions.append(position)
-                log.info("ROI detected, found: %d, postion of target: %d",
-                         sorted_classes[0], position)
-            else:
-                log.info("ROI detected, found: %s", sorted_classes[0])
-
-        key = visualize(view_frame, position,
-                        [img_retrieval.impaths[i] for i in sorted_indexes],
-                        distances[sorted_indexes] if position is not None else None,
-                        img_retrieval.input_size, np.mean(compute_embeddings_times),
-                        np.mean(search_in_gallery_times), imshow_delay=3)
-
-        if key == 27:
-            break
-
-    if positions:
-        compute_metrics(positions)
+    encoder = IEModel(
+        encoder_xml,
+        encoder_bin,
+        ie,
+        encoder_target_device,
+        num_requests=(3 if args.device == "MYRIAD" else 1),
+    )
+    decoder = IEModel(
+        decoder_xml, decoder_bin, ie, decoder_target_device, num_requests=2
+    )
+    video_demo(encoder, decoder, videos, args.fps, labels)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main() or 0)
