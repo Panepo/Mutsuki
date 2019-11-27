@@ -32,7 +32,7 @@ def run_pipeline(video, encoder, decoder, render_fn, fps=30):
     pipeline.add_step("Data", DataStep(video), parallel=False)
     pipeline.add_step("Encoder", EncoderStep(encoder), parallel=False)
     pipeline.add_step("Decoder", DecoderStep(decoder), parallel=False)
-    pipeline.add_step("Render", RenderStep(render_fn, fps=fps), parallel=True)
+    pipeline.add_step("Render", RenderStep(render_fn, fps=fps), parallel=False)
 
     pipeline.run()
     pipeline.close()

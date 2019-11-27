@@ -49,21 +49,21 @@ def build_argparser():
         "--m_encoder",
         help="Required. Path to encoder model",
         type=str,
-        default="../models/driver_action_recognition_tsd_0002_encoder.xml",
+        default="../models/driver-action-recognition-adas-0002-encoder.xml",
     )
     args.add_argument(
         "-m_de",
         "--m_decoder",
         help="Required. Path to decoder model",
         type=str,
-        default="../models/driver_action_recognition_tsd_0002_decoder.xml",
+        default="../models/driver-action-recognition-adas-0002-decoder.xml",
     )
     args.add_argument(
         "-i",
         "--input",
         help="Required. Id of the video capturing device to open (to open default camera just pass 0), "
         "path to a video or a .txt file with a list of ids or video files (one object per line)",
-        required=True,
+        default="2",
         type=str,
     )
     args.add_argument(
@@ -85,7 +85,8 @@ def build_argparser():
     )
     args.add_argument("--fps", help="Optional. FPS for renderer", default=30, type=int)
     args.add_argument(
-        "-lb", "--labels", help="Optional. Path to file with label names", type=str
+        "-lb", "--labels", help="Optional. Path to file with label names", type=str,
+        default="../driver_actions.txt"
     )
 
     return parser
