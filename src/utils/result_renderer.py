@@ -20,6 +20,8 @@ from itertools import islice
 
 import cv2
 import numpy as np
+import logging as log
+import time
 
 from .meters import WindowAverageMeter
 
@@ -118,6 +120,19 @@ class ResultRenderer(object):
         key = cv2.waitKey(1) & 0xFF
         if key in {ord("q"), ord("Q"), 27}:
             return -1
+        elif key in {ord("c"), ord("C")}:
+            self.save_result(frame, "action_recognition")
+
+    def save_result(self, image, name):
+        fileName = (
+            "../output/"
+            + name
+            + "_"
+            + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())
+            + ".png"
+        )
+        cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+        log.info("saved results to {}".format(fileName))
 
 
 class LabelPostprocessing:
