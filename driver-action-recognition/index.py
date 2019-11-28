@@ -49,14 +49,14 @@ def build_argparser():
         "--m_encoder",
         help="Required. Path to encoder model",
         type=str,
-        default="../models/driver-action-recognition-adas-0002-encoder.xml",
+        default="./models/driver-action-recognition-adas-0002-encoder.xml",
     )
     args.add_argument(
         "-m_de",
         "--m_decoder",
         help="Required. Path to decoder model",
         type=str,
-        default="../models/driver-action-recognition-adas-0002-decoder.xml",
+        default="./models/driver-action-recognition-adas-0002-decoder.xml",
     )
     args.add_argument(
         "-i",
@@ -86,7 +86,7 @@ def build_argparser():
     args.add_argument("--fps", help="Optional. FPS for renderer", default=30, type=int)
     args.add_argument(
         "-lb", "--labels", help="Optional. Path to file with label names", type=str,
-        default="../driver_actions.txt"
+        default="./driver_actions.txt"
     )
 
     return parser
