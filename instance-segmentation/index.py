@@ -377,7 +377,7 @@ def main():
             break
         elif key in {ord("c"), ord("C")}:
             fileName = (
-                "../output/"
+                "./output/"
                 + "segmentation"
                 + "_"
                 + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())
