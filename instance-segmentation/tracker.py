@@ -32,8 +32,9 @@ class StaticIOUTracker(object):
     def affinity(self, masks, classes):
         areas = [np.count_nonzero(mask) for mask in masks]
         affinity_matrix = np.zeros((len(masks), len(self.history)), dtype=np.float32)
-        for i, (history_mask, history_area, history_class) in \
-                enumerate(zip(self.history, self.history_areas, self.history_classes)):
+        for i, (history_mask, history_area, history_class) in enumerate(
+            zip(self.history, self.history_areas, self.history_classes)
+        ):
             for j, (mask, area, cls) in enumerate(zip(masks, areas, classes)):
                 if cls != history_class:
                     continue
