@@ -85,8 +85,11 @@ def build_argparser():
     )
     args.add_argument("--fps", help="Optional. FPS for renderer", default=30, type=int)
     args.add_argument(
-        "-lb", "--labels", help="Optional. Path to file with label names", type=str,
-        default="./driver_actions.txt"
+        "-lb",
+        "--labels",
+        help="Optional. Path to file with label names",
+        type=str,
+        default="./driver_actions.txt",
     )
 
     return parser
