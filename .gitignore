@@ -127,3 +127,5 @@ dmypy.json
 /archieve
 */database
 */output
+*/images
+instance-segmentation-security-0050*
