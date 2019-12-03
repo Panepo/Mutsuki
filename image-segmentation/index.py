@@ -143,6 +143,7 @@ def main():
     out_blob = next(iter(net.outputs))
     net.batch_size = len(args.input)
     n, c, h, w = net.inputs[input_blob].shape
+    images = np.ndarray(shape=(n, c, h, w))
 
     # Loading model to the plugin
     log.info("Loading model to the plugin")
@@ -150,12 +151,12 @@ def main():
     del net
 
     try:
-        input_source = int(args.input_source)
+        input_source = int(args.input)
     except ValueError:
-        input_source = args.input_source
+        input_source = args.input
     cap = cv2.VideoCapture(input_source)
     if not cap.isOpened():
-        log.error('Failed to open "{}"'.format(args.input_source))
+        log.error('Failed to open "{}"'.format(args.input))
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     render_time = 0
@@ -170,22 +171,17 @@ def main():
         if not ret:
             break
 
-        if args.no_keep_aspect_ratio:
-            # Resize the image to a target size.
-            scale_x = w / frame.shape[1]
-            scale_y = h / frame.shape[0]
-            input_image = cv2.resize(frame, (w, h))
-        else:
-            # Resize the image to keep the same aspect ratio and to fit it to a window of a target size.
-            scale_x = scale_y = min(h / frame.shape[0], w / frame.shape[1])
-            input_image = cv2.resize(frame, None, fx=scale_x, fy=scale_y)
+        if frame.shape[:-1] != (h, w):
+            image = cv2.resize(frame, (w, h))
 
         # Change data layout from HWC to CHW.
-        input_image = input_image.transpose((2, 0, 1))
+        image = image.transpose((2, 0, 1))
+
+        images[0] = image
 
         # Run the net.
         inf_start = time.time()
-        res = exec_net.infer(inputs={input_blob: input_image})
+        res = exec_net.infer(inputs={input_blob: images})
         inf_end = time.time()
         det_time = inf_end - inf_start
 
@@ -201,14 +197,15 @@ def main():
                 )
             )
 
-        classes_map = np.zeros(shape=(out_h, out_w, 3), dtype=np.int)
-        for i in range(out_h):
-            for j in range(out_w):
-                if len(res[:, i, j]) == 1:
-                    pixel_class = int(res[:, i, j])
-                else:
-                    pixel_class = np.argmax(res[:, i, j])
-                classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
+        for batch, data in enumerate(res):
+            classes_map = np.zeros(shape=(out_h, out_w, 3), dtype=np.int)
+            for i in range(out_h):
+                for j in range(out_w):
+                    if len(res[:, i, j]) == 1:
+                        pixel_class = int(res[:, i, j])
+                    else:
+                        pixel_class = np.argmax(res[:, i, j])
+                    classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
 
         # Show resulting image.
         cv2.imshow("Results", classes_map)
