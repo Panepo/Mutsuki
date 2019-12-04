@@ -66,10 +66,9 @@ def build_argparser():
     args.add_argument(
         "-i",
         "--input",
-        help="Required. Path to a folder with images or path to an image files",
-        required=True,
-        type=str,
-        nargs="+",
+        metavar="PATH",
+        default="2",
+        help="(optional) Path to the input video " "('0' for the camera, default)",
     )
     args.add_argument(
         "-l",
@@ -175,9 +174,9 @@ def main():
             image = cv2.resize(frame, (w, h))
 
         # Change data layout from HWC to CHW.
-        image = image.transpose((2, 0, 1))
+        imageT = image.transpose((2, 0, 1))
 
-        images[0] = image
+        images[0] = imageT
 
         # Run the net.
         inf_start = time.time()
@@ -197,18 +196,49 @@ def main():
                 )
             )
 
-        for batch, data in enumerate(res):
-            classes_map = np.zeros(shape=(out_h, out_w, 3), dtype=np.int)
-            for i in range(out_h):
-                for j in range(out_w):
-                    if len(res[:, i, j]) == 1:
-                        pixel_class = int(res[:, i, j])
-                    else:
-                        pixel_class = np.argmax(res[:, i, j])
-                    classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
+        classes_map = np.zeros(shape=(out_h, out_w, 3), dtype=np.uint8)
+        for i in range(out_h):
+            for j in range(out_w):
+                if len(res[0][:, i, j]) == 1:
+                    pixel_class = int(res[0][:, i, j])
+                else:
+                    pixel_class = np.argmax(res[0][:, i, j])
+                classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
+
+        render_start = time.time()
+
+        # Combine mask into image
+        cv2.addWeighted(image, 0.7, classes_map, 0.3, 0, dst=image)
+
+        # Draw performance stats.
+        inf_time_message = "Inference time: {:.3f} ms".format(det_time * 1000)
+        render_time_message = "OpenCV rendering time: {:.3f} ms".format(
+            render_time * 1000
+        )
+        cv2.putText(
+            image,
+            inf_time_message,
+            (15, 15),
+            cv2.FONT_HERSHEY_COMPLEX,
+            0.5,
+            (200, 10, 10),
+            1,
+        )
+        cv2.putText(
+            image,
+            render_time_message,
+            (15, 30),
+            cv2.FONT_HERSHEY_COMPLEX,
+            0.5,
+            (10, 10, 200),
+            1,
+        )
+
 
         # Show resulting image.
-        cv2.imshow("Results", classes_map)
+        cv2.imshow("Results", image)
+        render_end = time.time()
+        render_time = render_end - render_start
 
         key = cv2.waitKey(1) & 0xFF
         if key in {ord("q"), ord("Q"), 27}:
