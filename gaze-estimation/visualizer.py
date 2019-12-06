@@ -26,6 +26,7 @@ from openvino.inference_engine import IENetwork
 from ie_module import InferenceContext
 from landmarks_detector import LandmarksDetector
 from face_detector import FaceDetector
+from headpose_detector import HeadposeDetector
 
 DEVICE_KINDS = ["CPU", "GPU", "FPGA", "MYRIAD", "HETERO", "HDDL"]
 
@@ -45,6 +46,7 @@ class FrameProcessor:
         log.info("Loading models")
         face_detector_net = self.load_model(args.m_fd)
         landmarks_net = self.load_model(args.m_lm)
+        headpost_net = self.load_model(args.m_hp)
 
         self.face_detector = FaceDetector(
             face_detector_net,
@@ -52,9 +54,11 @@ class FrameProcessor:
             roi_scale_factor=args.exp_r_fd,
         )
         self.landmarks_detector = LandmarksDetector(landmarks_net)
+        self.headpose_detector = HeadposeDetector(headpost_net)
 
         self.face_detector.deploy(args.d_fd, context)
         self.landmarks_detector.deploy(args.d_lm, context, queue_size=self.QUEUE_SIZE)
+        self.headpose_detector.deploy(args.d_hp, context)
         log.info("Models are loaded")
 
         self.allow_grow = args.allow_grow and not args.no_show
