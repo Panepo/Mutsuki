@@ -22,6 +22,7 @@ from visualizer import Visualizer
 
 DEVICE_KINDS = ["CPU", "GPU", "FPGA", "MYRIAD", "HETERO", "HDDL"]
 
+
 def build_argparser():
     parser = ArgumentParser()
 
@@ -167,6 +168,7 @@ def build_argparser():
     )
 
     return parser
+
 
 def main():
     args = build_argparser().parse_args()

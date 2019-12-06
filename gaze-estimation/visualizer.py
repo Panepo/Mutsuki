@@ -30,6 +30,7 @@ from headpose_detector import HeadposeDetector
 
 DEVICE_KINDS = ["CPU", "GPU", "FPGA", "MYRIAD", "HETERO", "HDDL"]
 
+
 class FrameProcessor:
     QUEUE_SIZE = 16
 
@@ -88,6 +89,7 @@ class FrameProcessor:
 
         self.face_detector.clear()
         self.landmarks_detector.clear()
+        self.headpose_detector.clear()
 
         self.face_detector.start_async(frame)
         rois = self.face_detector.get_roi_proposals(frame)
@@ -99,15 +101,17 @@ class FrameProcessor:
             rois = rois[: self.QUEUE_SIZE]
         self.landmarks_detector.start_async(frame, rois)
         landmarks = self.landmarks_detector.get_landmarks()
+        self.headpose_detector.start_async(frame, rois)
+        headposes = self.headpose_detector.get_headposes()
 
-        outputs = [rois, landmarks]
+        outputs = [rois, landmarks, headposes]
 
         return outputs
 
     def get_performance_stats(self):
         stats = {
             "face_detector": self.face_detector.get_performance_stats(),
-            "landmarks": self.landmarks_detector.get_performance_stats()
+            "landmarks": self.landmarks_detector.get_performance_stats(),
         }
         return stats
 
@@ -171,7 +175,7 @@ class Visualizer:
         )
 
     def draw_detection_keypoints(self, frame, roi, landmarks):
-        '''
+        """
         keypoints = [
             landmarks.left_eye,
             landmarks.right_eye,
@@ -179,7 +183,7 @@ class Visualizer:
             landmarks.left_lip_corner,
             landmarks.right_lip_corner,
         ]
-        '''
+        """
         keypoints = landmarks.points
 
         for point in keypoints:

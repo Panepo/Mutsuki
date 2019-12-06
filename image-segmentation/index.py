@@ -77,7 +77,7 @@ def build_argparser():
         "Absolute MKLDNN (CPU)-targeted custom layers. Absolute path to a shared library with the "
         "kernels implementations",
         type=str,
-        default="/opt/intel/openvino_2019.3.376/inference_engine/lib/intel64/libcpu_extension_sse4.so"
+        default="/opt/intel/openvino_2019.3.376/inference_engine/lib/intel64/libcpu_extension_sse4.so",
     )
     args.add_argument(
         "-d",
@@ -160,7 +160,6 @@ def main():
 
     render_time = 0
 
-
     log.info("Starting inference...")
     print(
         "To close the application, press 'CTRL+C' here or switch to the output window and press ESC key"
@@ -206,7 +205,7 @@ def main():
                     pixel_class = np.argmax(res[0][:, i, j])
                 classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
 
-        #render_start = time.time()
+        # render_start = time.time()
 
         # Combine mask into image
         cv2.addWeighted(image, 0.7, classes_map, 0.3, 0, dst=image)
@@ -235,7 +234,6 @@ def main():
             1,
         )
 
-
         # Show resulting image.
         cv2.imshow("Results", image)
         render_end = time.time()
@@ -259,6 +257,7 @@ def main():
     cap.release()
     del exec_net
     del ie
+
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
