@@ -21,7 +21,7 @@ from ie_module import Module
 
 
 class LandmarksDetector(Module):
-    POINTS_NUMBER = 34
+    POINTS_NUMBER = 35
 
     class Result:
         def __init__(self, outputs):
@@ -50,10 +50,10 @@ class LandmarksDetector(Module):
         self.input_shape = model.inputs[self.input_blob].shape
 
         assert np.array_equal(
-            [1, self.POINTS_NUMBER * 2, 1, 1], model.outputs[self.output_blob].shape
+            [1, self.POINTS_NUMBER * 2], model.outputs[self.output_blob].shape
         ), (
             "Expected model output shape %s, but got %s"
-            % ([1, self.POINTS_NUMBER * 2, 1, 1], model.outputs[self.output_blob].shape)
+            % ([1, self.POINTS_NUMBER * 2], model.outputs[self.output_blob].shape)
         )
 
     def preprocess(self, frame, rois):

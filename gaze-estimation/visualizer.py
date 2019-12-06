@@ -33,7 +33,7 @@ class FrameProcessor:
     QUEUE_SIZE = 16
 
     def __init__(self, args):
-        used_devices = set([args.d_fd, args.d_lm, args.d_reid])
+        used_devices = set([args.d_fd, args.d_lm])
         self.context = InferenceContext()
         context = self.context
         context.load_plugins(used_devices, args.cpu_lib, args.gpu_lib)

@@ -78,7 +78,7 @@ def build_argparser():
     models.add_argument(
         "-m_lm",
         metavar="PATH",
-        default="./models/facial-landmarks-35-adas-0002",
+        default="./models/facial-landmarks-35-adas-0002.xml",
         help="Path to the Facial Landmarks Regression model XML file",
     )
 
