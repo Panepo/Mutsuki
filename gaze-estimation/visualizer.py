@@ -95,9 +95,8 @@ class FrameProcessor:
             rois = rois[: self.QUEUE_SIZE]
         self.landmarks_detector.start_async(frame, rois)
         landmarks = self.landmarks_detector.get_landmarks()
-        face_identities = []
 
-        outputs = [rois, landmarks, face_identities]
+        outputs = [rois, landmarks]
 
         return outputs
 
@@ -161,7 +160,7 @@ class Visualizer:
         )
         return text_size, baseline
 
-    def draw_detection_roi(self, frame, roi, identity):
+    def draw_detection_roi(self, frame, roi):
         # Draw face ROI border
         cv2.rectangle(
             frame, tuple(roi.position), tuple(roi.position + roi.size), (0, 220, 0), 2
@@ -181,8 +180,8 @@ class Visualizer:
             cv2.circle(frame, tuple(center.astype(int)), 2, (0, 255, 255), 2)
 
     def draw_detections(self, frame, detections):
-        for roi, landmarks, identity in zip(*detections):
-            self.draw_detection_roi(frame, roi, identity)
+        for roi, landmarks in zip(*detections):
+            self.draw_detection_roi(frame, roi)
             self.draw_detection_keypoints(frame, roi, landmarks)
 
     def draw_status(self, frame, detections):
