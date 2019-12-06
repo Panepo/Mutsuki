@@ -167,6 +167,7 @@ class Visualizer:
         )
 
     def draw_detection_keypoints(self, frame, roi, landmarks):
+        '''
         keypoints = [
             landmarks.left_eye,
             landmarks.right_eye,
@@ -174,6 +175,8 @@ class Visualizer:
             landmarks.left_lip_corner,
             landmarks.right_lip_corner,
         ]
+        '''
+        keypoints = landmarks.points
 
         for point in keypoints:
             center = roi.position + roi.size * point

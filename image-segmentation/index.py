@@ -175,7 +175,6 @@ def main():
 
         # Change data layout from HWC to CHW.
         imageT = image.transpose((2, 0, 1))
-
         images[0] = imageT
 
         # Run the net.
@@ -183,6 +182,8 @@ def main():
         res = exec_net.infer(inputs={input_blob: images})
         inf_end = time.time()
         det_time = inf_end - inf_start
+
+        render_start = time.time()
 
         res = res[out_blob]
         if len(res.shape) == 3:
@@ -205,7 +206,7 @@ def main():
                     pixel_class = np.argmax(res[0][:, i, j])
                 classes_map[i, j, :] = classes_color_map[min(pixel_class, 20)]
 
-        render_start = time.time()
+        #render_start = time.time()
 
         # Combine mask into image
         cv2.addWeighted(image, 0.7, classes_map, 0.3, 0, dst=image)
@@ -251,7 +252,7 @@ def main():
                 + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())
                 + ".png"
             )
-            cv2.imwrite(fileName, frame, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+            cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
             log.info("saved results to {}".format(fileName))
 
     cv2.destroyAllWindows()
