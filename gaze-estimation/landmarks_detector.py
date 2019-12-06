@@ -21,7 +21,7 @@ from ie_module import Module
 
 
 class LandmarksDetector(Module):
-    POINTS_NUMBER = 5
+    POINTS_NUMBER = 34
 
     class Result:
         def __init__(self, outputs):
@@ -29,10 +29,10 @@ class LandmarksDetector(Module):
 
             p = lambda i: self[i]
             self.left_eye = p(0)
-            self.right_eye = p(1)
-            self.nose_tip = p(2)
-            self.left_lip_corner = p(3)
-            self.right_lip_corner = p(4)
+            self.right_eye = p(3)
+            self.nose_tip = p(4)
+            self.left_lip_corner = p(8)
+            self.right_lip_corner = p(9)
 
         def __getitem__(self, idx):
             return self.points[idx]
