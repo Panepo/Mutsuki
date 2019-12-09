@@ -7,7 +7,7 @@ from ie_module import Module
 class HeadposeDetector(Module):
     class Result:
         def __init__(self, yaw, pitch, roll):
-            self.raw = yaw
+            self.yaw = yaw
             self.pitch = pitch
             self.roll = roll
 

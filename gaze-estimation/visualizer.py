@@ -206,8 +206,8 @@ class Visualizer:
 
         cv2.line(
             frame,
-            tuple(int(xCenter), int(yCenter)),
-            tuple(
+            (int(xCenter), int(yCenter)),
+            (
                 int(xCenter + axisLength * (cosR * cosY + sinY * sinP * sinR)),
                 int(yCenter + axisLength * (cosP * sinR)),
             ),
@@ -216,8 +216,8 @@ class Visualizer:
         )
         cv2.line(
             frame,
-            tuple(int(xCenter), int(yCenter)),
-            tuple(
+            (int(xCenter), int(yCenter)),
+            (
                 int(xCenter + axisLength * (cosR * sinY * sinP + cosY * sinR)),
                 int(yCenter - axisLength * (cosP * cosR)),
             ),
@@ -226,8 +226,8 @@ class Visualizer:
         )
         cv2.line(
             frame,
-            tuple(int(xCenter), int(yCenter)),
-            tuple(
+            (int(xCenter), int(yCenter)),
+            (
                 int(xCenter + axisLength * (sinY * cosP)),
                 int(yCenter + axisLength * sinP),
             ),
