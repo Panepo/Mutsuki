@@ -54,7 +54,11 @@ class HeadposeDetector(Module):
     def get_headposes(self):
         outputs = self.get_outputs()
         results = [
-            HeadposeDetector.Result(out[self.output_blob_yaw], out[self.output_blob_pitch], out[self.output_blob_roll])
+            HeadposeDetector.Result(
+                out[self.output_blob_yaw],
+                out[self.output_blob_pitch],
+                out[self.output_blob_roll],
+            )
             for out in outputs
         ]
         return results

@@ -18,6 +18,7 @@ import logging as log
 import os.path as osp
 import sys
 import time
+import math
 
 import cv2
 import numpy as np
@@ -190,10 +191,55 @@ class Visualizer:
             center = roi.position + roi.size * point
             cv2.circle(frame, tuple(center.astype(int)), 2, (0, 255, 255), 2)
 
+    def draw_detection_headposes(self, frame, roi, headposes):
+        sinY = math.sin(headposes.yaw * math.pi / 180)
+        sinP = math.sin(headposes.pitch * math.pi / 180)
+        sinR = math.sin(headposes.roll * math.pi / 180)
+
+        cosY = math.cos(headposes.yaw * math.pi / 180)
+        cosP = math.cos(headposes.pitch * math.pi / 180)
+        cosR = math.cos(headposes.roll * math.pi / 180)
+
+        axisLength = 0.4 * roi.size[0]
+        xCenter = roi.position[0] + roi.size[0] / 2
+        yCenter = roi.position[1] + roi.size[1] / 2
+
+        cv2.line(
+            frame,
+            tuple(int(xCenter), int(yCenter)),
+            tuple(
+                int(xCenter + axisLength * (cosR * cosY + sinY * sinP * sinR)),
+                int(yCenter + axisLength * (cosP * sinR)),
+            ),
+            (0, 0, 255),
+            2,
+        )
+        cv2.line(
+            frame,
+            tuple(int(xCenter), int(yCenter)),
+            tuple(
+                int(xCenter + axisLength * (cosR * sinY * sinP + cosY * sinR)),
+                int(yCenter - axisLength * (cosP * cosR)),
+            ),
+            (0, 255, 0),
+            2,
+        )
+        cv2.line(
+            frame,
+            tuple(int(xCenter), int(yCenter)),
+            tuple(
+                int(xCenter + axisLength * (sinY * cosP)),
+                int(yCenter + axisLength * sinP),
+            ),
+            (255, 0, 255),
+            2,
+        )
+
     def draw_detections(self, frame, detections):
-        for roi, landmarks in zip(*detections):
+        for roi, landmarks, headposes in zip(*detections):
             self.draw_detection_roi(frame, roi)
             self.draw_detection_keypoints(frame, roi, landmarks)
+            self.draw_detection_headposes(frame, roi, headposes)
 
     def draw_status(self, frame, detections):
         origin = np.array([10, 10])
