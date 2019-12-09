@@ -88,6 +88,12 @@ def build_argparser():
         default="./models/head-pose-estimation-adas-0001.xml",
         help="Path to the Head Pose Detection model XML file",
     )
+    models.add_argument(
+        "-m_gz",
+        metavar="PATH",
+        default="./models/gaze-estimation-adas-0002.xml",
+        help="Path to the Gaze Detection model XML file",
+    )
 
     infer = parser.add_argument_group("Inference options")
     infer.add_argument(
@@ -110,6 +116,13 @@ def build_argparser():
         choices=DEVICE_KINDS,
         help="(optional) Target device for the "
         "Head Pose Detection model (default: %(default)s)",
+    )
+    infer.add_argument(
+        "-d_gz",
+        default="CPU",
+        choices=DEVICE_KINDS,
+        help="(optional) Target device for the "
+        "Gaze Detection model (default: %(default)s)",
     )
     infer.add_argument(
         "-l",
