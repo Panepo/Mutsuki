@@ -28,8 +28,8 @@ class LandmarksDetector(Module):
             self.points = outputs
 
             p = lambda i: self[i]
-            self.left_eye = p(0)
-            self.right_eye = p(3)
+            self.left_eye = [p(1), p(0)]
+            self.right_eye = [p(2), p(3)]
             self.nose_tip = p(4)
             self.left_lip_corner = p(8)
             self.right_lip_corner = p(9)

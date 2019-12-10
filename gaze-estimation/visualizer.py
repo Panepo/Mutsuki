@@ -108,6 +108,7 @@ class FrameProcessor:
         landmarks = self.landmarks_detector.get_landmarks()
         self.headpose_detector.start_async(frame, rois)
         headposes = self.headpose_detector.get_headposes()
+        self.gaze_detector.start_async(frame, rois, landmarks, headposes)
 
         outputs = [rois, landmarks, headposes]
 
