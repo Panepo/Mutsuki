@@ -23,7 +23,6 @@ class GazeDetector(Module):
             self.headposes.append(headposes.pitch)
             self.headposes.append(headposes.roll)
 
-
     class BoundingBox:
         def __init__(self, position, size):
             self.position = position
