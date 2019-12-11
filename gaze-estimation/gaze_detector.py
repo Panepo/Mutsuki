@@ -10,7 +10,7 @@ import numpy as np
 class GazeDetector(Module):
     class Result:
         def __init__(self, gazeVector):
-            self.gazeVector = gazeVector
+            self.gazeVector = gazeVector[0]
 
     class PreProcessResult:
         def __init__(self, imgLeft, imgRight, midLeft, midRight, headposes):

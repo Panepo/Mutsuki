@@ -111,7 +111,7 @@ class FrameProcessor:
         midpoints = self.gaze_detector.start_async(frame, rois, landmarks, headposes)
         gazevectors = self.gaze_detector.get_gazevector()
 
-        outputs = [rois, landmarks, headposes]
+        outputs = [rois, landmarks, headposes, gazevectors, midpoints]
 
         return outputs
 
@@ -242,7 +242,7 @@ class Visualizer:
         )
 
     def draw_detections(self, frame, detections):
-        for roi, landmarks, headposes in zip(*detections):
+        for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
             self.draw_detection_roi(frame, roi)
             self.draw_detection_keypoints(frame, roi, landmarks)
             self.draw_detection_headposes(frame, roi, headposes)
