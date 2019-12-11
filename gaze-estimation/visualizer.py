@@ -245,8 +245,18 @@ class Visualizer:
         eyeLeft = roi.position + roi.size * midpoints.midLeft
         eyeRight = roi.position + roi.size * midpoints.midRight
 
-        cv2.circle(frame, tuple(eyeLeft.astype(int)), 2, (255, 255, 255), 2)
-        cv2.circle(frame, tuple(eyeRight.astype(int)), 2, (255, 255, 255), 2)
+        #cv2.circle(frame, tuple(eyeLeft.astype(int)), 2, (255, 255, 255), 2)
+        #cv2.circle(frame, tuple(eyeRight.astype(int)), 2, (255, 255, 255), 2)
+
+        arrowLength = 0.4 * roi.size[0]
+        gazeArrowLeftX = int(eyeLeft + gazevector.gazeVector[0] * arrowLength)
+        gazeArrowLeftY = int(eyeLeft - gazevector.gazeVector[1] * arrowLength)
+
+        gazeArrowRightX = int(eyeRight + gazevector.gazeVector[0] * arrowLength)
+        gazeArrowRightY = int(eyeRight - gazevector.gazeVector[1] * arrowLength)
+
+        cv2.arrowedLine(frame, tuple(eyeLeft.astype(int)), (gazeArrowLeftX, gazeArrowLeftY), (255, 0, 0), 2)
+        cv2.arrowedLine(frame, tuple(eyeRight.astype(int)), (gazeArrowRightX, gazeArrowRightY), (255, 0, 0), 2)
 
     def draw_detections(self, frame, detections):
         for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
