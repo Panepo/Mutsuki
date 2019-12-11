@@ -1,6 +1,6 @@
 import numpy as np
 
-from utils import cut_rois, resize_input
+from utils import cut_rois, resize_input, cut_roi
 from ie_module import Module
 
 import cv2
@@ -14,11 +14,9 @@ class GazeDetector(Module):
             self.roll = roll
 
     class BoundingBox:
-        def __init__(self, x, y, width, height):
-            self.x = x
-            self.y = y
-            self.width = width
-            self.height = height
+        def __init__(self, position, size):
+            self.position = position
+            self.size = size
 
     def __init__(self, model):
         super(GazeDetector, self).__init__(model)
@@ -43,17 +41,38 @@ class GazeDetector(Module):
         )
 
     def createEyeBoundingBox(self, eyeLeft, eyeRight, scale = 1):
-        print(eyeLeft)
+        size = cv2.norm(eyeLeft - eyeRight)
+        width = scale * size
+        height = width
 
+        midpoint = (eyeLeft + eyeRight) / 2
+        x = midpoint[0] - (width / 2)
+        y = midpoint[1] - (height / 2)
+
+        position = np.array((x, y))
+        size = np.array((width, height))
+
+        return self.BoundingBox(position, size)
 
     def preprocess(self, frame, rois, landmarks, headposes):
         assert len(frame.shape) == 4, "Frame shape should be [1, c, h, w]"
         inputs = cut_rois(frame, rois)
 
         output = []
-        for input, landmark in zip(inputs, landmarks):
-            self.createEyeBoundingBox(landmark.left_eye[0], landmark.left_eye[1])
-            output.append(resize_input(input, self.input_shape))
+        for input, roi, landmark in zip(inputs, rois, landmarks):
+            boxLeft = self.createEyeBoundingBox(landmark.left_eye[0], landmark.left_eye[1])
+            boxRight = self.createEyeBoundingBox(landmark.right_eye[0], landmark.right_eye[1])
+
+            midLeft = (landmark.left_eye[0] + landmark.left_eye[1]) / 2
+            midRight = (landmark.right_eye[0] + landmark.right_eye[1]) / 2
+
+            scaledBoxLeft = self.BoundingBox(boxLeft.position * roi.size, boxLeft.size * roi.size)
+            scaledBoxRight = self.BoundingBox(boxRight.position * roi.size, boxRight.size * roi.size)
+
+            imgLeft = cut_roi(input, scaledBoxLeft)
+            imgRight = cut_roi(input, scaledBoxRight)
+
+            #output.append(resize_input(input, self.input_shape))
 
         return output
 
