@@ -18,7 +18,11 @@ class GazeDetector(Module):
             self.imgRight = imgRight
             self.midLeft = midLeft
             self.midRight = midRight
-            self.headposes = headposes
+            self.headposes = []
+            self.headposes.append(headposes.yaw)
+            self.headposes.append(headposes.pitch)
+            self.headposes.append(headposes.roll)
+
 
     class BoundingBox:
         def __init__(self, position, size):
@@ -69,7 +73,7 @@ class GazeDetector(Module):
         inputs = cut_rois(frame, rois)
 
         output = []
-        for input, roi, landmark in zip(inputs, rois, landmarks):
+        for input, roi, landmark, headpose in zip(inputs, rois, landmarks, headposes):
             boxLeft = self.createEyeBoundingBox(
                 landmark.left_eye[0], landmark.left_eye[1]
             )
@@ -93,7 +97,7 @@ class GazeDetector(Module):
             )
 
             output.append(
-                self.PreProcessResult(imgLeft, imgRight, midLeft, midRight, headposes)
+                self.PreProcessResult(imgLeft, imgRight, midLeft, midRight, headpose)
             )
 
         return output
@@ -112,7 +116,7 @@ class GazeDetector(Module):
         midpoint = []
         for input in inputs:
             self.enqueue(input)
-            midpoint.append(self.MidPoint(input.midLeft, input.midRigh))
+            midpoint.append(self.MidPoint(input.midLeft, input.midRight))
 
         return midpoint
 

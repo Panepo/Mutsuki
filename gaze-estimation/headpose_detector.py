@@ -7,9 +7,9 @@ from ie_module import Module
 class HeadposeDetector(Module):
     class Result:
         def __init__(self, yaw, pitch, roll):
-            self.yaw = yaw
-            self.pitch = pitch
-            self.roll = roll
+            self.yaw = yaw[0][0]
+            self.pitch = pitch[0][0]
+            self.roll = roll[0][0]
 
     def __init__(self, model):
         super(HeadposeDetector, self).__init__(model)
