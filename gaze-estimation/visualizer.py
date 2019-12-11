@@ -241,11 +241,19 @@ class Visualizer:
             2,
         )
 
+    def draw_detection_gaze(self, frame, roi, gazevector, midpoints):
+        eyeLeft = roi.position + roi.size * midpoints.midLeft
+        eyeRight = roi.position + roi.size * midpoints.midRight
+
+        cv2.circle(frame, tuple(eyeLeft.astype(int)), 2, (255, 255, 255), 2)
+        cv2.circle(frame, tuple(eyeRight.astype(int)), 2, (255, 255, 255), 2)
+
     def draw_detections(self, frame, detections):
         for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
             self.draw_detection_roi(frame, roi)
             self.draw_detection_keypoints(frame, roi, landmarks)
             self.draw_detection_headposes(frame, roi, headposes)
+            self.draw_detection_gaze(frame, roi, gazevectors, midpoints)
 
     def draw_status(self, frame, detections):
         origin = np.array([10, 10])
