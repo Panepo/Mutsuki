@@ -25,7 +25,7 @@ import numpy as np
 
 from openvino.inference_engine import IENetwork
 from ie_module import InferenceContext
-
+from pedestrain_detector import PedestrainDetector
 
 DEVICE_KINDS = ["CPU", "GPU", "FPGA", "MYRIAD", "HETERO", "HDDL"]
 
@@ -44,11 +44,11 @@ class FrameProcessor:
             )
 
         log.info("Loading models")
-        #face_detector_net = self.load_model(args.m_fd)
+        pedestrain_detector_net = self.load_model(args.m_pd)
 
-        #self.landmarks_detector = LandmarksDetector(landmarks_net)
+        self.pedestrain_detector = PedestrainDetector(pedestrain_detector_net)
 
-        #self.face_detector.deploy(args.d_fd, context)
+        self.pedestrain_detector.deploy(args.d_pd, context)
 
         log.info("Models are loaded")
 
@@ -91,15 +91,18 @@ class FrameProcessor:
             rois = rois[: self.QUEUE_SIZE]
         '''
 
-        outputs = [rois, landmarks, headposes, gazevectors, midpoints]
+        #outputs = [rois, landmarks, headposes, gazevectors, midpoints]
+        output = []
 
         return outputs
 
     def get_performance_stats(self):
+        '''
         stats = {
             "face_detector": self.face_detector.get_performance_stats(),
             "landmarks": self.landmarks_detector.get_performance_stats(),
         }
+        '''
         return stats
 
 
@@ -162,8 +165,8 @@ class Visualizer:
         )
 
     def draw_detections(self, frame, detections):
-        for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
-            self.draw_detection_roi(frame, roi)
+        #for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
+        #    self.draw_detection_roi(frame, roi)
 
     def draw_status(self, frame, detections):
         origin = np.array([10, 10])
