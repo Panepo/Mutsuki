@@ -125,7 +125,7 @@ class ResultRenderer(object):
 
     def save_result(self, image, name):
         fileName = (
-            "../output/"
+            "./output/"
             + name
             + "_"
             + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())

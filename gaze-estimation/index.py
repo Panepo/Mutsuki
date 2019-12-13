@@ -157,6 +157,7 @@ def build_argparser():
         help="(optional) Probability threshold for face detections"
         "(default: %(default)s)",
     )
+    '''
     infer.add_argument(
         "-t_id",
         metavar="[0..1]",
@@ -179,6 +180,7 @@ def build_argparser():
         help="(optional) Allow to grow faces gallery and to dump on disk. "
         "Available only if --no_show option is off.",
     )
+    '''
 
     return parser
 
