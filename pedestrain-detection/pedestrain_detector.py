@@ -22,26 +22,12 @@ class PedestrainDetector(Module):
         self.input_shape = model.inputs[self.input_blob].shape
         self.output_shape = model.outputs[self.output_blob].shape
 
-        assert (
-            len(self.output_shape) == 4
-            and self.output_shape[3] == self.Result.OUTPUT_SIZE
-        ), "Expected model output shape with %s outputs" % (self.Result.OUTPUT_SIZE)
+        assert np.array_equal([1, 1, 200, 7], model.outputs[self.output_blob].shape), (
+            "Expected model output shape %s, but got %s"
+            % ([1, 1, 200, 7], model.outputs[self.output_blob].shape)
+        )
 
-    def createEyeBoundingBox(self, eyeLeft, eyeRight, scale=1):
-        size = cv2.norm(eyeLeft - eyeRight)
-        width = scale * size
-        height = width
-
-        midpoint = (eyeLeft + eyeRight) / 2
-        x = midpoint[0] - (width / 2)
-        y = midpoint[1] - (height / 2)
-
-        position = np.array((x, y))
-        size = np.array((width, height))
-
-        return self.BoundingBox(position, size)
-
-    def preprocess(self, frame, rois, landmarks, headposes):
+    def preprocess(self, frame):
         assert len(frame.shape) == 4, "Frame shape should be [1, c, h, w]"
         assert frame.shape[0] == 1
         assert frame.shape[1] == 3
@@ -51,13 +37,11 @@ class PedestrainDetector(Module):
     def enqueue(self, input):
         return super(PedestrainDetector, self).enqueue({self.input_blob: input})
 
-    def start_async(self, frame, rois, landmarks, headposes):
+    def start_async(self, frame):
         input = self.preprocess(frame)
         self.enqueue(input)
 
-    '''
-    def get_gazevector(self):
+    def get_detection(self):
         outputs = self.get_outputs()
-        results = [GazeDetector.Result(out[self.output_blob]) for out in outputs]
+        results = [PedestrainDetector.Result(out[self.output_blob]) for out in outputs]
         return results
-    '''

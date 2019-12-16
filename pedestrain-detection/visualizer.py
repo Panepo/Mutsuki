@@ -34,7 +34,7 @@ class FrameProcessor:
     QUEUE_SIZE = 16
 
     def __init__(self, args):
-        used_devices = set([args.d_fd, args.d_lm])
+        used_devices = set([args.d_pd])
         self.context = InferenceContext()
         context = self.context
         context.load_plugins(used_devices, args.cpu_lib, args.gpu_lib)
@@ -52,7 +52,7 @@ class FrameProcessor:
 
         log.info("Models are loaded")
 
-        self.allow_grow = args.allow_grow and not args.no_show
+        #self.allow_grow = args.allow_grow and not args.no_show
 
     def load_model(self, model_path):
         model_path = osp.abspath(model_path)
@@ -77,12 +77,13 @@ class FrameProcessor:
         frame = frame.transpose((2, 0, 1))  # HWC to CHW
         frame = np.expand_dims(frame, axis=0)
 
-        #self.face_detector.clear()
+        self.pedestrain_detector.clear()
 
+        self.pedestrain_detector.start_async(frame)
 
-        #self.face_detector.start_async(frame)
+        detections = self.pedestrain_detector.get_detection()
         '''
-        rois = self.face_detector.get_roi_proposals(frame)
+        rois = self.face_detector.get_roi_proposals(frame)`
         if self.QUEUE_SIZE < len(rois):
             log.warning(
                 "Too many faces for processing."
@@ -91,8 +92,7 @@ class FrameProcessor:
             rois = rois[: self.QUEUE_SIZE]
         '''
 
-        #outputs = [rois, landmarks, headposes, gazevectors, midpoints]
-        output = []
+        outputs = [detections]
 
         return outputs
 
@@ -165,6 +165,7 @@ class Visualizer:
         )
 
     def draw_detections(self, frame, detections):
+        print('FQ')
         #for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
         #    self.draw_detection_roi(frame, roi)
 
@@ -254,8 +255,8 @@ class Visualizer:
                 frame = Visualizer.center_crop(frame, self.input_crop)
             detections = self.frame_processor.process(frame)
 
-            self.draw_detections(frame, detections)
-            self.draw_status(frame, detections)
+            #self.draw_detections(frame, detections)
+            #self.draw_status(frame, detections)
 
             if output_stream:
                 output_stream.write(frame)

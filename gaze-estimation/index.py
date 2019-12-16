@@ -157,15 +157,6 @@ def build_argparser():
         help="(optional) Probability threshold for face detections"
         "(default: %(default)s)",
     )
-    '''
-    infer.add_argument(
-        "-t_id",
-        metavar="[0..1]",
-        type=float,
-        default=0.2,
-        help="(optional) Cosine distance threshold between two vectors "
-        "for face identification (default: %(default)s)",
-    )
     infer.add_argument(
         "-exp_r_fd",
         metavar="NUMBER",
@@ -174,13 +165,6 @@ def build_argparser():
         help="(optional) Scaling ratio for bboxes passed to face recognition "
         "(default: %(default)s)",
     )
-    infer.add_argument(
-        "--allow_grow",
-        action="store_true",
-        help="(optional) Allow to grow faces gallery and to dump on disk. "
-        "Available only if --no_show option is off.",
-    )
-    '''
 
     return parser
 

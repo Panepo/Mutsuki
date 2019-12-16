@@ -67,8 +67,6 @@ class FrameProcessor:
         self.gaze_detector.deploy(args.d_gz, context)
         log.info("Models are loaded")
 
-        self.allow_grow = args.allow_grow and not args.no_show
-
     def load_model(self, model_path):
         model_path = osp.abspath(model_path)
         model_description_path = model_path
