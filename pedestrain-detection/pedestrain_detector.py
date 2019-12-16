@@ -9,8 +9,28 @@ import numpy as np
 
 class PedestrainDetector(Module):
     class Result:
-        def __init__(self, gazeVector):
-            self.gazeVector = gazeVector[0]
+        def __init__(self, output):
+            self.image_id = output[0]
+            self.label = int(output[1])
+            self.confidence = output[2]
+            self.position = np.array((output[3], output[4]))  # (x, y)
+            self.size = np.array((output[5], output[6]))  # (w, h)
+
+        def rescale_roi(self, roi_scale_factor=1.0):
+            self.position -= self.size * 0.5 * (roi_scale_factor - 1.0)
+            self.size *= roi_scale_factor
+
+        def resize_roi(self, frame_width, frame_height):
+            self.position[0] *= frame_width
+            self.position[1] *= frame_height
+            self.size[0] = self.size[0] * frame_width - self.position[0]
+            self.size[1] = self.size[1] * frame_height - self.position[1]
+
+        def clip(self, width, height):
+            min = [0, 0]
+            max = [width, height]
+            self.position[:] = clip(self.position, min, max)
+            self.size[:] = clip(self.size, min, max)
 
     def __init__(self, model):
         super(PedestrainDetector, self).__init__(model)
@@ -41,7 +61,23 @@ class PedestrainDetector(Module):
         input = self.preprocess(frame)
         self.enqueue(input)
 
-    def get_detection(self):
-        outputs = self.get_outputs()
-        results = [PedestrainDetector.Result(out[self.output_blob]) for out in outputs]
+    def get_detection(self, frame):
+        outputs = self.get_outputs()[0][self.output_blob]
+        # outputs shape is [N_requests, 1, 1, N_max_faces, 7]
+
+        frame_width = frame.shape[-1]
+        frame_height = frame.shape[-2]
+
+        results = []
+        for output in outputs[0][0]:
+            result = PedestrainDetector.Result(output)
+            if result.confidence < self.confidence_threshold:
+                break  # results are sorted by confidence decrease
+
+            result.resize_roi(frame_width, frame_height)
+            result.rescale_roi(self.roi_scale_factor)
+            result.clip(frame_width, frame_height)
+
+            results.append(result)
+
         return results

@@ -255,8 +255,8 @@ class Visualizer:
                 frame = Visualizer.center_crop(frame, self.input_crop)
             detections = self.frame_processor.process(frame)
 
-            #self.draw_detections(frame, detections)
-            #self.draw_status(frame, detections)
+            self.draw_detections(frame, detections)
+            self.draw_status(frame, detections)
 
             if output_stream:
                 output_stream.write(frame)
