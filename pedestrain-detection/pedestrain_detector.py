@@ -32,7 +32,7 @@ class PedestrainDetector(Module):
             self.position[:] = clip(self.position, min, max)
             self.size[:] = clip(self.size, min, max)
 
-    def __init__(self, model):
+    def __init__(self, model, confidence_threshold=0.5, roi_scale_factor=1.15):
         super(PedestrainDetector, self).__init__(model)
 
         assert len(model.inputs) == 1, "Expected 1 input blob"
@@ -46,6 +46,14 @@ class PedestrainDetector(Module):
             "Expected model output shape %s, but got %s"
             % ([1, 1, 200, 7], model.outputs[self.output_blob].shape)
         )
+
+        assert (
+            0.0 <= confidence_threshold and confidence_threshold <= 1.0
+        ), "Confidence threshold is expected to be in range [0; 1]"
+        self.confidence_threshold = confidence_threshold
+
+        assert 0.0 < roi_scale_factor, "Expected positive ROI scale factor"
+        self.roi_scale_factor = roi_scale_factor
 
     def preprocess(self, frame):
         assert len(frame.shape) == 4, "Frame shape should be [1, c, h, w]"
