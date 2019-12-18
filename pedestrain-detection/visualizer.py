@@ -81,7 +81,7 @@ class FrameProcessor:
 
         self.pedestrain_detector.start_async(frame)
 
-        detections = self.pedestrain_detector.get_detection()
+        detections = self.pedestrain_detector.get_detection(frame)
         '''
         rois = self.face_detector.get_roi_proposals(frame)`
         if self.QUEUE_SIZE < len(rois):
@@ -160,14 +160,19 @@ class Visualizer:
 
     def draw_detection_roi(self, frame, roi):
         # Draw face ROI border
-        cv2.rectangle(
-            frame, tuple(roi.position), tuple(roi.position + roi.size), (0, 220, 0), 2
-        )
+        if roi.label is 1:
+            cv2.rectangle(
+                frame, tuple(roi.position), tuple(roi.position + roi.size), (0, 220, 0), 2
+            )
+        else:
+            cv2.rectangle(
+                frame, tuple(roi.position), tuple(roi.position + roi.size), (0, 0, 220), 2
+            )
 
     def draw_detections(self, frame, detections):
-        print('FQ')
-        #for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
-        #    self.draw_detection_roi(frame, roi)
+        for rois in detections:
+            for roi in rois:
+                self.draw_detection_roi(frame, roi)
 
     def draw_status(self, frame, detections):
         origin = np.array([10, 10])

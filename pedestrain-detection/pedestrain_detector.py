@@ -29,8 +29,8 @@ class PedestrainDetector(Module):
         def clip(self, width, height):
             min = [0, 0]
             max = [width, height]
-            self.position[:] = clip(self.position, min, max)
-            self.size[:] = clip(self.size, min, max)
+            self.position[:] = np.clip(self.position, min, max)
+            self.size[:] = np.clip(self.size, min, max)
 
     def __init__(self, model, confidence_threshold=0.5, roi_scale_factor=1.15):
         super(PedestrainDetector, self).__init__(model)
