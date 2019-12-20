@@ -1,0 +1,193 @@
+<?xml version="1.0" ?>
+<net batch="1" name="text-image-super-resolution-0001" version="6">
+	<layers>
+		<layer id="0" name="0" precision="FP32" type="Input">
+			<output>
+				<port id="0">
+					<dim>1</dim>
+					<dim>1</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="1" name="9" precision="FP32" type="Convolution">
+			<data dilations="1,1" group="1" kernel="3,3" output="4" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>1</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="0" size="144"/>
+				<biases offset="144" size="16"/>
+			</blobs>
+		</layer>
+		<layer id="2" name="10" precision="FP32" type="ReLU">
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="3" name="11" precision="FP32" type="Convolution">
+			<data dilations="1,1" group="1" kernel="3,3" output="36" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>36</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="160" size="5184"/>
+				<biases offset="5344" size="144"/>
+			</blobs>
+		</layer>
+		<layer id="4" name="12" precision="FP32" type="Deconvolution">
+			<data dilations="1,1" group="1" kernel="3,3" output="4" pads_begin="0,0" pads_end="0,0" strides="3,3"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>36</dim>
+					<dim>360</dim>
+					<dim>640</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>1080</dim>
+					<dim>1920</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="5488" size="5184"/>
+				<biases offset="10672" size="16"/>
+			</blobs>
+		</layer>
+		<layer id="5" name="13" precision="FP32" type="ReLU">
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>1080</dim>
+					<dim>1920</dim>
+				</port>
+			</input>
+			<output>
+				<port id="1">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>1080</dim>
+					<dim>1920</dim>
+				</port>
+			</output>
+		</layer>
+		<layer id="6" name="14" precision="FP32" type="Convolution">
+			<data dilations="1,1" group="1" kernel="3,3" output="1" pads_begin="1,1" pads_end="1,1" strides="1,1"/>
+			<input>
+				<port id="0">
+					<dim>1</dim>
+					<dim>4</dim>
+					<dim>1080</dim>
+					<dim>1920</dim>
+				</port>
+			</input>
+			<output>
+				<port id="3">
+					<dim>1</dim>
+					<dim>1</dim>
+					<dim>1080</dim>
+					<dim>1920</dim>
+				</port>
+			</output>
+			<blobs>
+				<weights offset="10688" size="144"/>
+				<biases offset="10832" size="4"/>
+			</blobs>
+		</layer>
+	</layers>
+	<edges>
+		<edge from-layer="0" from-port="0" to-layer="1" to-port="0"/>
+		<edge from-layer="1" from-port="3" to-layer="2" to-port="0"/>
+		<edge from-layer="2" from-port="1" to-layer="3" to-port="0"/>
+		<edge from-layer="3" from-port="3" to-layer="4" to-port="0"/>
+		<edge from-layer="4" from-port="3" to-layer="5" to-port="0"/>
+		<edge from-layer="5" from-port="1" to-layer="6" to-port="0"/>
+	</edges>
+	<meta_data>
+		<MO_version value="2019.3.0-227-g3a4f9de20"/>
+		<cli_parameters>
+			<blobs_as_inputs value="False"/>
+			<caffe_parser_path value="DIR"/>
+			<data_type value="FP32"/>
+			<disable_nhwc_to_nchw value="False"/>
+			<disable_omitting_optional value="False"/>
+			<disable_resnet_optimization value="False"/>
+			<enable_concat_optimization value="False"/>
+			<enable_flattening_nested_params value="False"/>
+			<enable_ssd_gluoncv value="False"/>
+			<extensions value="DIR"/>
+			<framework value="onnx"/>
+			<freeze_placeholder_with_value value="{}"/>
+			<generate_experimental_IR_V10 value="False"/>
+			<input value="0"/>
+			<input_model value="DIR/text_sr_0029.onnx"/>
+			<input_model_is_text value="False"/>
+			<input_shape value="[1,1,360,640]"/>
+			<k value="DIR/CustomLayersMapping.xml"/>
+			<keep_quantize_ops_in_IR value="False"/>
+			<keep_shape_ops value="False"/>
+			<legacy_mxnet_model value="False"/>
+			<log_level value="ERROR"/>
+			<mean_scale_values value="{'0': {'mean': None, 'scale': array([254.99997578])}}"/>
+			<mean_values value="()"/>
+			<model_name value="text-image-super-resolution-0001"/>
+			<move_to_preprocess value="False"/>
+			<output_dir value="DIR"/>
+			<placeholder_shapes value="{'0': array([  1,   1, 360, 640])}"/>
+			<remove_memory value="False"/>
+			<remove_output_softmax value="False"/>
+			<reverse_input_channels value="True"/>
+			<save_params_from_nd value="False"/>
+			<scale_values value="0[254.99997577500233]"/>
+			<silent value="False"/>
+			<steps value="False"/>
+			<version value="False"/>
+			<unset unset_cli_parameters="batch, counts, disable_fusing, disable_gfusing, finegrain_fusing, generate_deprecated_IR_V2, input_checkpoint, input_meta_graph, input_proto, input_symbol, mean_file, mean_file_offsets, nd_prefix_name, output, pretrained_model_name, saved_model_dir, saved_model_tags, scale, tensorboard_logdir, tensorflow_custom_layer_libraries, tensorflow_custom_operations_config_update, tensorflow_object_detection_api_pipeline_config, tensorflow_operation_patterns, tensorflow_subgraph_patterns, tensorflow_use_custom_operations_config"/>
+		</cli_parameters>
+	</meta_data>
+</net>
