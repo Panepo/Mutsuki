@@ -117,6 +117,8 @@ class FrameProcessor:
         stats = {
             "face_detector": self.face_detector.get_performance_stats(),
             "landmarks": self.landmarks_detector.get_performance_stats(),
+            "headpose_detector": self.headpose_detector.get_performance_stats(),
+            "gaze_detector": self.gaze_detector.get_performance_stats(),
         }
         return stats
 

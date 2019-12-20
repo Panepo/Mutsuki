@@ -31,7 +31,7 @@ DEVICE_KINDS = ["CPU", "GPU", "FPGA", "MYRIAD", "HETERO", "HDDL"]
 
 
 class FrameProcessor:
-    QUEUE_SIZE = 16
+    #QUEUE_SIZE = 16
 
     def __init__(self, args):
         used_devices = set([args.d_pd])
@@ -52,7 +52,6 @@ class FrameProcessor:
 
         log.info("Models are loaded")
 
-        #self.allow_grow = args.allow_grow and not args.no_show
 
     def load_model(self, model_path):
         model_path = osp.abspath(model_path)
@@ -97,12 +96,9 @@ class FrameProcessor:
         return outputs
 
     def get_performance_stats(self):
-        '''
         stats = {
-            "face_detector": self.face_detector.get_performance_stats(),
-            "landmarks": self.landmarks_detector.get_performance_stats(),
+            "pedestrain_detector": self.pedestrain_detector.get_performance_stats(),
         }
-        '''
         return stats
 
 
