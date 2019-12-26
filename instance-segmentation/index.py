@@ -84,6 +84,15 @@ def build_argparser():
         metavar='"<absolute_path>"',
     )
     args.add_argument(
+        "-c",
+        "--gpu_extension",
+        metavar="PATH",
+        default="/opt/intel/openvino_2019.3.376/inference_engine/lib/intel64/libMKLDNNPlugin.so",
+        type=str,
+        help="(optional) For clDNN (GPU)-targeted custom layers, if any. "
+        "Path to the XML file with descriptions of the kernels",
+    )
+    args.add_argument(
         "--delay",
         help="Optional. Interval in milliseconds of waiting for a key to be pressed.",
         default=1,
@@ -177,6 +186,10 @@ def main():
     ie = IECore()
     if args.cpu_extension and "CPU" in args.device:
         ie.add_extension(args.cpu_extension, "CPU")
+
+    if args.gpu_extension and "GPU" in args.device:
+        ie.add_extension(args.gpu_extension, "GPU")
+
     # Read IR
     log.info("Loading network files:\n\t{}\n\t{}".format(model_xml, model_bin))
     net = IENetwork(model=model_xml, weights=model_bin)
