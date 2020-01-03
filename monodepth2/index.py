@@ -143,7 +143,7 @@ def main(args):
 
         # colorize depth image
         render_start = time.time()
-        disp_resized_np = disp_resized.squeeze().cpu().detch().numpy()
+        disp_resized_np = disp_resized.squeeze().cpu().detach().numpy()
         vmax = np.percentile(disp_resized_np, 95)
         normalizer = mpl.colors.Normalize(vmin=disp_resized_np.min(), vmax=vmax)
         mapper = cm.ScalarMappable(norm=normalizer, cmap="magma")
@@ -152,12 +152,37 @@ def main(args):
         )
         output = pil.fromarray(colormapped_im)
 
+        render_end = time.time()
+        render_time = render_end - render_start
+
+        # Draw performance stats.
+        inf_time_message = "Inference time: {:.3f} ms".format(det_time * 1000)
+        render_time_message = "OpenCV rendering time: {:.3f} ms".format(
+            render_time * 1000
+        )
+        cv2.putText(
+            frame,
+            inf_time_message,
+            (15, 15),
+            cv2.FONT_HERSHEY_COMPLEX,
+            0.5,
+            (200, 10, 10),
+            1,
+        )
+        cv2.putText(
+            frame,
+            render_time_message,
+            (15, 30),
+            cv2.FONT_HERSHEY_COMPLEX,
+            0.5,
+            (10, 10, 200),
+            1,
+        )
+
         # Show resulting image.
         result = cv2.cvtColor(np.asarray(output),cv2.COLOR_RGB2BGR)
         cv2.imshow("Frame", frame)
         cv2.imshow("Results", result)
-        render_end = time.time()
-        render_time = render_end - render_start
 
         key = cv2.waitKey(1) & 0xFF
         if key in {ord("q"), ord("Q"), 27}:
@@ -165,12 +190,12 @@ def main(args):
         elif key in {ord("c"), ord("C")}:
             fileName = (
                 "./output/"
-                + "segmentation"
+                + "monodepth"
                 + "_"
                 + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())
-                + ".png"
             )
-            cv2.imwrite(fileName, result, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+            cv2.imwrite(fileNam + "_frame.png", frame, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+            cv2.imwrite(fileNam + "_depth.png", result, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
             log.info("saved results to {}".format(fileName))
 
 
