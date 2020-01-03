@@ -203,7 +203,8 @@ def main(args):
             cv2.imwrite(
                 fileName + "_depth.png", result, [int(cv2.IMWRITE_PNG_COMPRESSION), 0]
             )
-            log.info("saved results to {}".format(fileName))
+            log.info("saved results to {}".format(fileName+ "_frame.png"))
+            log.info("saved results to {}".format(fileName+ "_depth.png"))
 
 
 if __name__ == "__main__":
