@@ -143,7 +143,7 @@ def main(args):
 
         # colorize depth image
         render_start = time.time()
-        disp_resized_np = disp_resized.squeeze().cpu().numpy()
+        disp_resized_np = disp_resized.squeeze().cpu().detch().numpy()
         vmax = np.percentile(disp_resized_np, 95)
         normalizer = mpl.colors.Normalize(vmin=disp_resized_np.min(), vmax=vmax)
         mapper = cm.ScalarMappable(norm=normalizer, cmap="magma")
@@ -154,6 +154,7 @@ def main(args):
 
         # Show resulting image.
         result = cv2.cvtColor(np.asarray(output),cv2.COLOR_RGB2BGR)
+        cv2.imshow("Frame", frame)
         cv2.imshow("Results", result)
         render_end = time.time()
         render_time = render_end - render_start
