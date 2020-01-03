@@ -120,10 +120,13 @@ def main(args):
             break
 
         # Load frame and preprocess
-        input_image = pil.fromarray(cv2.cvtColor(frame,cv2.COLOR_BGR2RGB))
+        process_start = time.time()
+        input_image = pil.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         original_width, original_height = input_image.size
         input_image = input_image.resize((feed_width, feed_height), pil.LANCZOS)
         input_image = transforms.ToTensor()(input_image).unsqueeze(0)
+        process_end = time.time()
+        process_time = process_end - process_start
 
         # PREDICTION
         inf_start = time.time()
@@ -157,8 +160,8 @@ def main(args):
 
         # Draw performance stats.
         inf_time_message = "Inference time: {:.3f} ms".format(det_time * 1000)
-        render_time_message = "OpenCV rendering time: {:.3f} ms".format(
-            render_time * 1000
+        render_time_message = "Rendering time: {:.3f} ms".format(
+            (render_time + process_time) * 1000
         )
         cv2.putText(
             frame,
@@ -180,7 +183,7 @@ def main(args):
         )
 
         # Show resulting image.
-        result = cv2.cvtColor(np.asarray(output),cv2.COLOR_RGB2BGR)
+        result = cv2.cvtColor(np.asarray(output), cv2.COLOR_RGB2BGR)
         cv2.imshow("Frame", frame)
         cv2.imshow("Results", result)
 
@@ -194,8 +197,12 @@ def main(args):
                 + "_"
                 + time.strftime("%Y-%m-%d_%H%M%S-", time.localtime())
             )
-            cv2.imwrite(fileNam + "_frame.png", frame, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
-            cv2.imwrite(fileNam + "_depth.png", result, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
+            cv2.imwrite(
+                fileName + "_frame.png", frame, [int(cv2.IMWRITE_PNG_COMPRESSION), 0]
+            )
+            cv2.imwrite(
+                fileName + "_depth.png", result, [int(cv2.IMWRITE_PNG_COMPRESSION), 0]
+            )
             log.info("saved results to {}".format(fileName))
 
 
