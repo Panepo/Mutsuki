@@ -86,7 +86,6 @@ class FrameProcessor:
         assert len(frame.shape) == 3, "Expected input frame in (H, W, C) format"
         assert frame.shape[2] in [3, 4], "Expected BGR or BGRA input"
 
-        orig_image = frame.copy()
         frame = frame.transpose((2, 0, 1))  # HWC to CHW
         frame = np.expand_dims(frame, axis=0)
 
@@ -127,6 +126,12 @@ class Visualizer:
     BREAK_KEY_LABELS = "q(Q) or Escape"
     BREAK_KEYS = {ord("q"), ord("Q"), 27}
     CAPTURE_KEYS = {ord("c"), ord("C")}
+    DETECT_KEYS = {ord("d"), ord("D")}
+    POSE_KEYS = {ord("h"), ord("H")}
+    LANDMARK_KEYS = {ord("l"), ord("L")}
+    GAZE_KEYS = {ord("g"), ord("G")}
+    TOGGLE_KEYS = {ord("a"), ord("A")}
+    TOGGLE_OFF_KEYS = {ord("n"), ord("N")}
 
     def __init__(self, args):
         self.frame_processor = FrameProcessor(args)
@@ -144,6 +149,11 @@ class Visualizer:
             self.input_crop = np.array((args.crop_width, args.crop_height))
 
         self.frame_timeout = 0 if args.timelapse else 1
+
+        self.toggle_detect = True
+        self.toggle_pose = True
+        self.toggle_landmark = True
+        self.toggle_gaze = True
 
     def update_fps(self):
         now = time.time()
@@ -175,28 +185,22 @@ class Visualizer:
         )
         return text_size, baseline
 
+    # Draw face ROI border
     def draw_detection_roi(self, frame, roi):
-        # Draw face ROI border
+
         cv2.rectangle(
             frame, tuple(roi.position), tuple(roi.position + roi.size), (0, 220, 0), 2
         )
 
+    # Draw face landmarks
     def draw_detection_keypoints(self, frame, roi, landmarks):
-        """
-        keypoints = [
-            landmarks.left_eye,
-            landmarks.right_eye,
-            landmarks.nose_tip,
-            landmarks.left_lip_corner,
-            landmarks.right_lip_corner,
-        ]
-        """
         keypoints = landmarks.points
 
         for point in keypoints:
             center = roi.position + roi.size * point
             cv2.circle(frame, tuple(center.astype(int)), 2, (0, 255, 255), 2)
 
+    # Draw visualation of headposes
     def draw_detection_headposes(self, frame, roi, headposes):
         sinY = math.sin(headposes.yaw * math.pi / 180)
         sinP = math.sin(headposes.pitch * math.pi / 180)
@@ -241,6 +245,7 @@ class Visualizer:
             2,
         )
 
+    # Draw visualation of gaze vectors
     def draw_detection_gaze(self, frame, roi, gazevector, midpoints):
         eyeLeft = roi.position + roi.size * midpoints.midLeft
         eyeRight = roi.position + roi.size * midpoints.midRight
@@ -269,10 +274,17 @@ class Visualizer:
 
     def draw_detections(self, frame, detections):
         for roi, landmarks, headposes, gazevectors, midpoints in zip(*detections):
-            self.draw_detection_roi(frame, roi)
-            self.draw_detection_keypoints(frame, roi, landmarks)
-            self.draw_detection_headposes(frame, roi, headposes)
-            self.draw_detection_gaze(frame, roi, gazevectors, midpoints)
+            if self.toggle_detect:
+                self.draw_detection_roi(frame, roi)
+
+            if self.toggle_landmark:
+                self.draw_detection_keypoints(frame, roi, landmarks)
+
+            if self.toggle_pose:
+                self.draw_detection_headposes(frame, roi, headposes)
+
+            if self.toggle_gaze:
+                self.draw_detection_gaze(frame, roi, gazevectors, midpoints)
 
     def draw_status(self, frame, detections):
         origin = np.array([10, 10])
@@ -344,6 +356,24 @@ class Visualizer:
         if key in self.CAPTURE_KEYS:
             log.info("Screen captured")
             self.save_result(frame, "recognition")
+        elif key in self.DETECT_KEYS:
+            self.toggle_detect = not self.toggle_detect
+        elif key in self.POSE_KEYS:
+            self.toggle_pose = not self.toggle_pose
+        elif key in self.LANDMARK_KEYS:
+            self.toggle_landmark = not self.toggle_landmark
+        elif key in self.GAZE_KEYS:
+            self.toggle_gaze = not self.toggle_gaze
+        elif key in self.TOGGLE_KEYS:
+            self.toggle_detect = True
+            self.toggle_gaze = True
+            self.toggle_landmark = True
+            self.toggle_pose = True
+        elif key in self.TOGGLE_OFF_KEYS:
+            self.toggle_detect = False
+            self.toggle_gaze = False
+            self.toggle_landmark = False
+            self.toggle_pose = False
 
         return key in self.BREAK_KEYS
 
