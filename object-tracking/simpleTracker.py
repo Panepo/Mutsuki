@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 cap = cv2.VideoCapture(0)
-tracker = cv2.Tracker_create("KCF")
+tracker = cv2.TrackerKCF_create()
 traceStart = 0
 
 while(True):
