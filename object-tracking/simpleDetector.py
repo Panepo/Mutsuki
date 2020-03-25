@@ -8,6 +8,7 @@ import time
 BREAK_KEYS = {ord("q"), ord("Q"), 27}
 CAPTURE_KEYS = {ord("c"), ord("C")}
 
+
 def build_argparser():
     parser = ArgumentParser()
 
@@ -49,25 +50,26 @@ def build_argparser():
         "-pw",
         "--path_weight",
         metavar="PATH",
-        default='./models/yolov3-tiny.weights',
+        default="./models/yolov3-tiny.weights",
         help="Path to YOLO weights",
     )
     detections.add_argument(
         "-pc",
         "--path_config",
         metavar="PATH",
-        default='./models/yolov3-tiny.cfg',
+        default="./models/yolov3-tiny.cfg",
         help="Path to YOLO configs",
     )
     detections.add_argument(
         "-pl",
         "--path_label",
         metavar="PATH",
-        default='./models/coco.names',
+        default="./models/coco.names",
         help="Path to YOLO labels",
     )
 
     return parser
+
 
 def center_crop(frame, crop_size):
     fh, fw, fc = frame.shape
@@ -90,6 +92,7 @@ def save_result(image, name):
     )
     cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
     log.info("saved results to {}".format(fileName))
+
 
 def main():
     args = build_argparser().parse_args()
@@ -119,9 +122,9 @@ def main():
     net = cv2.dnn.readNetFromDarknet(args.path_config, args.path_weight)
     LABELS = open(args.path_label).read().strip().split("\n")
     np.random.seed(42)
-    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),dtype="uint8")
+    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3), dtype="uint8")
 
-    while(True):
+    while True:
         (grabbed, frame) = cap.read()
         if not grabbed:
             break
@@ -136,7 +139,9 @@ def main():
         ln = net.getLayerNames()
         ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-        blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416),swapRB=True, crop=False)
+        blob = cv2.dnn.blobFromImage(
+            frame, 1 / 255.0, (416, 416), swapRB=True, crop=False
+        )
         net.setInput(blob)
         layerOutputs = net.forward(ln)
 
@@ -167,7 +172,9 @@ def main():
                 color = [int(c) for c in COLORS[classIDs[i]]]
                 cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
                 text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
-                cv2.putText(frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,0.5, color, 2)
+                cv2.putText(
+                    frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2
+                )
 
         cv2.imshow("Detector", frame)
 
@@ -179,10 +186,11 @@ def main():
             break
         elif getKey in CAPTURE_KEYS:
             log.info("Screen captured")
-            save_result(frame, "tracking")
+            save_result(frame, "detecting")
 
-        cap.release()
-        cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
