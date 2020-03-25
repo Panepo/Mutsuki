@@ -151,6 +151,7 @@ def main():
     while True:
         (grabbed, frame) = cap.read()
         if not grabbed:
+            log.error("no inputs")
             break
 
         start = time.time()
