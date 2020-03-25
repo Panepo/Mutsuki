@@ -10,6 +10,7 @@ TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN"]
 BREAK_KEYS = {ord("q"), ord("Q"), 27}
 CAPTURE_KEYS = {ord("c"), ord("C")}
 TRACKING_KEYS = {ord("t"), ord("T")}
+TRACKING_STOP_KEYS = {ord("s"), ord("S")}
 
 
 def build_argparser():
@@ -94,7 +95,13 @@ def main():
     )
     log.debug(str(args))
 
-    cap = cv2.VideoCapture(args.input)
+    log.info("Reading input data from '%s'" % (args.input))
+    stream = args.input
+    try:
+        stream = int(args.input)
+    except ValueError:
+        pass
+    cap = cv2.VideoCapture(stream)
     frame_size = (
         int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
@@ -159,6 +166,8 @@ def main():
         elif getKey in CAPTURE_KEYS:
             log.info("Screen captured")
             save_result(frame, "tracking")
+        elif getKey in TRACKING_STOP_KEYS:
+            traceStart = 0
 
     cap.release()
     cv2.destroyAllWindows()

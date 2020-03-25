@@ -104,7 +104,13 @@ def main():
     )
     log.debug(str(args))
 
-    cap = cv2.VideoCapture(args.input)
+    log.info("Reading input data from '%s'" % (args.input))
+    stream = args.input
+    try:
+        stream = int(args.input)
+    except ValueError:
+        pass
+    cap = cv2.VideoCapture(stream)
     frame_size = (
         int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),

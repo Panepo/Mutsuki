@@ -10,6 +10,7 @@ TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN"]
 BREAK_KEYS = {ord("q"), ord("Q"), 27}
 CAPTURE_KEYS = {ord("c"), ord("C")}
 TRACKING_KEYS = {ord("t"), ord("T")}
+TRACKING_STOP_KEYS = {ord("s"), ord("S")}
 
 def build_argparser():
     parser = ArgumentParser()
@@ -113,7 +114,13 @@ def main():
     )
     log.debug(str(args))
 
-    cap = cv2.VideoCapture(args.input)
+    log.info("Reading input data from '%s'" % (args.input))
+    stream = args.input
+    try:
+        stream = int(args.input)
+    except ValueError:
+        pass
+    cap = cv2.VideoCapture(stream)
     frame_size = (
         int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
         int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
@@ -215,9 +222,6 @@ def main():
         end = time.time()
         log.info("Detect and tracking took {:.6f} seconds".format(end - start))
 
-        print(boxes[0])
-        print(boxes[1])
-
         getKey = cv2.waitKey(frame_timeout) & 0xFF
         if getKey in BREAK_KEYS:
             break
@@ -225,9 +229,15 @@ def main():
             log.info("Screen captured")
             save_result(frame, "detTracking")
         elif getKey in TRACKING_KEYS:
-            bbox = boxes[0]
-            ok = tracker.init(frame, bbox)
-            traceStart = 1
+            if len(confidences) > 0:
+                max_index = np.argmax(confidences, axis=0)
+                bbox = (boxes[max_index][0], boxes[max_index][1], boxes[max_index][2], boxes[max_index][3])
+                ok = tracker.init(frame, bbox)
+                traceStart = 1
+            else:
+                log.warning("No detections")
+        elif getKey in TRACKING_STOP_KEYS:
+            traceStart = 0
 
     cap.release()
     cv2.destroyAllWindows()
