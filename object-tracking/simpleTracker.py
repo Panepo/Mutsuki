@@ -53,7 +53,7 @@ def build_argparser():
         "--log",
         default=False,
         type=bool,
-        help="(optional) Show more infomation at console"
+        help="(optional) Show more infomation at console",
     )
 
     detections = parser.add_argument_group("Detections")
@@ -91,6 +91,7 @@ def save_result(image, name):
     cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
     log.info("saved results to {}".format(fileName))
 
+
 def tracker_initial(tracker_kind):
     if tracker_kind == "BOOSTING":
         tracker = cv2.TrackerBoosting_create()
@@ -108,6 +109,7 @@ def tracker_initial(tracker_kind):
         tracker = cv2.TrackerCSRT_create()
 
     return tracker
+
 
 def main():
     args = build_argparser().parse_args()

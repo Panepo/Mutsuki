@@ -12,6 +12,7 @@ CAPTURE_KEYS = {ord("c"), ord("C")}
 TRACKING_KEYS = {ord("t"), ord("T")}
 TRACKING_STOP_KEYS = {ord("s"), ord("S")}
 
+
 def build_argparser():
     parser = ArgumentParser()
 
@@ -52,7 +53,7 @@ def build_argparser():
         "--log",
         default=False,
         type=bool,
-        help="(optional) Show more infomation at console"
+        help="(optional) Show more infomation at console",
     )
 
     detections = parser.add_argument_group("Detections")
@@ -124,6 +125,7 @@ def save_result(image, name):
     )
     cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
     log.info("saved results to {}".format(fileName))
+
 
 def tracker_initial(tracker_kind):
     if tracker_kind == "BOOSTING":
@@ -268,7 +270,12 @@ def main():
         elif getKey in TRACKING_KEYS:
             if len(confidences) > 0:
                 max_index = np.argmax(confidences, axis=0)
-                bbox = (boxes[max_index][0], boxes[max_index][1], boxes[max_index][2], boxes[max_index][3])
+                bbox = (
+                    boxes[max_index][0],
+                    boxes[max_index][1],
+                    boxes[max_index][2],
+                    boxes[max_index][3],
+                )
                 ok = tracker.init(frame, bbox)
                 traceStart = 1
             else:

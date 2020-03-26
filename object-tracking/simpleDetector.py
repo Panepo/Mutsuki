@@ -44,6 +44,13 @@ def build_argparser():
         "(default: no crop). Both -cw and -ch parameters "
         "should be specified to use crop.",
     )
+    general.add_argument(
+        "-l",
+        "--log",
+        default=False,
+        type=bool,
+        help="(optional) Show more infomation at console",
+    )
 
     detections = parser.add_argument_group("Detections")
     detections.add_argument(
@@ -150,7 +157,8 @@ def main():
             log.error("no inputs")
             break
 
-        start = time.time()
+        if args.log:
+            start = time.time()
 
         if input_crop is not None:
             frame = center_crop(frame, input_crop)
@@ -199,8 +207,9 @@ def main():
 
         cv2.imshow("Detector", frame)
 
-        end = time.time()
-        log.info("Detecting took {:.6f} seconds".format(end - start))
+        if args.log:
+            end = time.time()
+            log.info("Tracking took {:.6f} seconds".format(end - start))
 
         getKey = cv2.waitKey(frame_timeout) & 0xFF
         if getKey in BREAK_KEYS:
