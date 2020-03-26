@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import time
 
-TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN"]
+TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN", "CSRT"]
 
 BREAK_KEYS = {ord("q"), ord("Q"), 27}
 CAPTURE_KEYS = {ord("c"), ord("C")}
@@ -47,6 +47,13 @@ def build_argparser():
         "(default: no crop). Both -cw and -ch parameters "
         "should be specified to use crop.",
     )
+    general.add_argument(
+        "-l",
+        "--log",
+        default=False,
+        type=bool,
+        help="(optional) Show more infomation at console"
+    )
 
     detections = parser.add_argument_group("Detections")
     detections.add_argument(
@@ -54,7 +61,7 @@ def build_argparser():
         "--tracker",
         type=str,
         choices=TRACKER_KINDS,
-        default="KCF",
+        default="CSRT",
         help="OpenCV object tracker type",
     )
     detections.add_argument(
@@ -77,6 +84,20 @@ def build_argparser():
         metavar="PATH",
         default="./models/coco.names",
         help="Path to YOLO labels",
+    )
+    detections.add_argument(
+        "-c",
+        "--confidence",
+        type=float,
+        default=0.5,
+        help="minimum probability to filter weak detections",
+    )
+    detections.add_argument(
+        "-th",
+        "--threshold",
+        type=float,
+        default=0.3,
+        help="threshold when applying non-maxima suppression",
     )
 
     return parser
@@ -103,6 +124,25 @@ def save_result(image, name):
     )
     cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
     log.info("saved results to {}".format(fileName))
+
+def tracker_initial(tracker_kind):
+    if tracker_kind == "BOOSTING":
+        tracker = cv2.TrackerBoosting_create()
+    elif tracker_kind == "MIL":
+        tracker = cv2.TrackerMIL_create()
+    elif tracker_kind == "KCF":
+        tracker = cv2.TrackerKCF_create()
+    elif tracker_kind == "TLD":
+        tracker = cv2.TrackerTLD_create()
+    elif tracker_kind == "MEDIANFLOW":
+        tracker = cv2.TrackerMedianFlow_create()
+    elif tracker_kind == "GOTURN":
+        tracker = cv2.TrackerGOTURN_create()
+    elif tracker_kind == "CSRT":
+        tracker = cv2.TrackerCSRT_create()
+
+    return tracker
+
 
 def main():
     args = build_argparser().parse_args()
@@ -134,20 +174,9 @@ def main():
 
     frame_timeout = 0 if args.timelapse else 1
 
-    if args.tracker == "BOOSTING":
-        tracker = cv2.TrackerBoosting_create()
-    elif args.tracker == "MIL":
-        tracker = cv2.TrackerMIL_create()
-    elif args.tracker == "KCF":
-        tracker = cv2.TrackerKCF_create()
-    elif args.tracker == "TLD":
-        tracker = cv2.TrackerTLD_create()
-    elif args.tracker == "MEDIANFLOW":
-        tracker = cv2.TrackerMedianFlow_create()
-    elif args.tracker == "GOTURN":
-        tracker = cv2.TrackerGOTURN_create()
-
+    tracker = tracker_initial(args.tracker)
     traceStart = 0
+    traceWarning = True
 
     log.info("loading YOLO from disk...")
     net = cv2.dnn.readNetFromDarknet(args.path_config, args.path_weight)
@@ -161,7 +190,8 @@ def main():
             log.error("no inputs")
             break
 
-        start = time.time()
+        if args.log:
+            start = time.time()
 
         if input_crop is not None:
             frame = center_crop(frame, input_crop)
@@ -173,6 +203,12 @@ def main():
                 p1 = (int(bbox[0]), int(bbox[1]))
                 p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                 cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
+                if not traceWarning:
+                    traceWarning = True
+            else:
+                if traceWarning:
+                    log.warning("Tracking lost")
+                    traceWarning = False
 
         else:
             (H, W) = frame.shape[:2]
@@ -195,7 +231,7 @@ def main():
                     scores = detection[5:]
                     classID = np.argmax(scores)
                     confidence = scores[classID]
-                    if confidence > 0.5:
+                    if confidence > args.confidence:
                         box = detection[0:4] * np.array([W, H, W, H])
                         (centerX, centerY, width, height) = box.astype("int")
                         x = int(centerX - (width / 2))
@@ -204,7 +240,7 @@ def main():
                         confidences.append(float(confidence))
                         classIDs.append(classID)
 
-            idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.3)
+            idxs = cv2.dnn.NMSBoxes(boxes, confidences, args.confidence, args.threshold)
 
             if len(idxs) > 0:
                 for i in idxs.flatten():
@@ -219,8 +255,9 @@ def main():
 
         cv2.imshow("Detect and Tracker", frame)
 
-        end = time.time()
-        log.info("Detect and tracking took {:.6f} seconds".format(end - start))
+        if args.log:
+            end = time.time()
+            log.info("Detect and tracking took {:.6f} seconds".format(end - start))
 
         getKey = cv2.waitKey(frame_timeout) & 0xFF
         if getKey in BREAK_KEYS:
@@ -237,6 +274,8 @@ def main():
             else:
                 log.warning("No detections")
         elif getKey in TRACKING_STOP_KEYS:
+            tracker.clear()
+            tracker = tracker_initial(args.tracker)
             traceStart = 0
 
     cap.release()

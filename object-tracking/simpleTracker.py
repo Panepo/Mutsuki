@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import time
 
-TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN"]
+TRACKER_KINDS = ["KCF", "BOOSTING", "MIL", "TLD", "MEDIANFLOW", "GOTURN", "CSRT"]
 
 BREAK_KEYS = {ord("q"), ord("Q"), 27}
 CAPTURE_KEYS = {ord("c"), ord("C")}
@@ -48,6 +48,13 @@ def build_argparser():
         "(default: no crop). Both -cw and -ch parameters "
         "should be specified to use crop.",
     )
+    general.add_argument(
+        "-l",
+        "--log",
+        default=False,
+        type=bool,
+        help="(optional) Show more infomation at console"
+    )
 
     detections = parser.add_argument_group("Detections")
     detections.add_argument(
@@ -84,6 +91,23 @@ def save_result(image, name):
     cv2.imwrite(fileName, image, [int(cv2.IMWRITE_PNG_COMPRESSION), 0])
     log.info("saved results to {}".format(fileName))
 
+def tracker_initial(tracker_kind):
+    if tracker_kind == "BOOSTING":
+        tracker = cv2.TrackerBoosting_create()
+    elif tracker_kind == "MIL":
+        tracker = cv2.TrackerMIL_create()
+    elif tracker_kind == "KCF":
+        tracker = cv2.TrackerKCF_create()
+    elif tracker_kind == "TLD":
+        tracker = cv2.TrackerTLD_create()
+    elif tracker_kind == "MEDIANFLOW":
+        tracker = cv2.TrackerMedianFlow_create()
+    elif tracker_kind == "GOTURN":
+        tracker = cv2.TrackerGOTURN_create()
+    elif tracker_kind == "CSRT":
+        tracker = cv2.TrackerCSRT_create()
+
+    return tracker
 
 def main():
     args = build_argparser().parse_args()
@@ -127,8 +151,12 @@ def main():
         tracker = cv2.TrackerMedianFlow_create()
     elif args.tracker == "GOTURN":
         tracker = cv2.TrackerGOTURN_create()
+    elif args.tracker == "CSRT":
+        tracker = cv2.TrackerCSRT_create()
 
+    tracker = tracker_initial(args.tracker)
     traceStart = 0
+    traceWarning = True
 
     while True:
         (grabbed, frame) = cap.read()
@@ -136,7 +164,8 @@ def main():
             log.error("no inputs")
             break
 
-        start = time.time()
+        if args.log:
+            start = time.time()
 
         if input_crop is not None:
             frame = center_crop(frame, input_crop)
@@ -148,9 +177,16 @@ def main():
                 p1 = (int(bbox[0]), int(bbox[1]))
                 p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                 cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
+                if not traceWarning:
+                    traceWarning = True
+            else:
+                if traceWarning:
+                    log.warning("Tracking lost")
+                    traceWarning = False
 
-            end = time.time()
-            log.info("Tracking took {:.6f} seconds".format(end - start))
+            if args.log:
+                end = time.time()
+                log.info("Tracking took {:.6f} seconds".format(end - start))
 
         cv2.imshow("Tracking", frame)
 
@@ -159,7 +195,6 @@ def main():
             break
         elif getKey in TRACKING_KEYS:
             bbox = cv2.selectROI(frame, False)
-            print(bbox)
             ok = tracker.init(frame, bbox)
             traceStart = 1
             cv2.destroyAllWindows()
@@ -167,6 +202,8 @@ def main():
             log.info("Screen captured")
             save_result(frame, "tracking")
         elif getKey in TRACKING_STOP_KEYS:
+            tracker.clear()
+            tracker = tracker_initial(args.tracker)
             traceStart = 0
 
     cap.release()

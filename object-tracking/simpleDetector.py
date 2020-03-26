@@ -67,6 +67,20 @@ def build_argparser():
         default="./models/coco.names",
         help="Path to YOLO labels",
     )
+    detections.add_argument(
+        "-c",
+        "--confidence",
+        type=float,
+        default=0.5,
+        help="minimum probability to filter weak detections",
+    )
+    detections.add_argument(
+        "-th",
+        "--threshold",
+        type=float,
+        default=0.3,
+        help="threshold when applying non-maxima suppression",
+    )
 
     return parser
 
@@ -161,7 +175,7 @@ def main():
                 scores = detection[5:]
                 classID = np.argmax(scores)
                 confidence = scores[classID]
-                if confidence > 0.5:
+                if confidence > args.confidence:
                     box = detection[0:4] * np.array([W, H, W, H])
                     (centerX, centerY, width, height) = box.astype("int")
                     x = int(centerX - (width / 2))
@@ -170,7 +184,7 @@ def main():
                     confidences.append(float(confidence))
                     classIDs.append(classID)
 
-        idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.3)
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, args.confidence, args.threshold)
 
         if len(idxs) > 0:
             for i in idxs.flatten():
